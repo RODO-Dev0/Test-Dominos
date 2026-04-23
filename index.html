@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>🁎 Dominoes - Mobile Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overscroll-behavior: none;
+    }
+    
+    #root {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .mobile-container {
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      background: #1a1a2e;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow-x: hidden;
+      transition: all 0.3s;
+    }
+    
+    .mobile-container.glass {
+      background: rgba(26, 26, 46, 0.85) !important;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    
+    @media (min-width: 481px) {
+      .mobile-container {
+        border-radius: 32px;
+        margin: 16px auto;
+        min-height: calc(100vh - 32px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    }
+    
+    .glass-light {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    button {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+    
+    .btn-primary {
+      padding: 16px 24px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.15s;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.96);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    
+    .btn-secondary {
+      padding: 12px 20px;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-secondary:active {
+      background: rgba(255, 255, 255, 0.12);
+      transform: scale(0.96);
+    }
+    
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 24px;
+    }
+    
+    .btn-icon:active {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(0.92);
+    }
+    
+    .game-board {
+      background: linear-gradient(145deg, #1e6b3e 0%, #145a30 100%);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-height: 160px;
+    }
+    
+    .domino-tile {
+      background: linear-gradient(145deg, #f5f5f5 0%, #e0e0e0 100%);
+      border-radius: 12px;
+      box-shadow: 0 8px 0 #999, 0 12px 20px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+      border: 1px solid #ccc;
+      transition: all 0.15s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .domino-tile:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 #999, 0 8px 16px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    }
+    
+    .domino-tile.highlighted {
+      box-shadow: 0 8px 0 #8b5cf6, 0 12px 24px rgba(139, 92, 246, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+      border-color: #a78bfa;
+      transform: translateY(-2px);
+    }
+    
+    .domino-tile.small {
+      border-radius: 8px;
+      box-shadow: 0 4px 0 #999, 0 6px 12px rgba(0, 0, 0, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    
+    .pip {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+    
+    .small .pip { width: 4px; height: 4px; }
+    .pip.center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .pip.top-left { top: 18%; left: 18%; }
+    .pip.top-right { top: 18%; right: 18%; }
+    .pip.bottom-left { bottom: 18%; left: 18%; }
+    .pip.bottom-right { bottom: 18%; right: 18%; }
+    .pip.middle-left { top: 50%; left: 18%; transform: translateY(-50%); }
+    .pip.middle-right { top: 50%; right: 18%; transform: translateY(-50%); }
+    
+    .hand-container {
+      display: flex;
+      overflow-x: auto;
+      overflow-y: visible;
+      padding: 20px 16px 30px;
+      gap: 12px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+    }
+    
+    .hand-container::-webkit-scrollbar { display: none; }
+    .hand-container > * { scroll-snap-align: center; flex-shrink: 0; }
+    
+    .boneyard {
+      background: linear-gradient(145deg, #2d3748 0%, #1a202c 100%);
+      border-radius: 16px;
+      padding: 16px 12px;
+      box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 70px;
+    }
+    
+    .boneyard-count { font-size: 32px; font-weight: 800; color: white; line-height: 1; }
+    .boneyard-label { font-size: 11px; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+    
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+    }
+    
+    .player-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .player-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 40px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 20px;
+      color: white;
+    }
+    
+    .player-name { font-weight: 600; color: white; font-size: 16px; }
+    .player-status { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+    
+    .turn-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 8px;
+      background: #10b981;
+      box-shadow: 0 0 12px #10b981;
+    }
+    
+    .turn-indicator.waiting { background: #6b7280; box-shadow: none; }
+    
+    .winner-banner {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      border-radius: 60px;
+      padding: 16px 24px;
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
+      animation: pulse-glow 2s infinite;
+    }
+    
+    .winner-text { font-size: 20px; font-weight: 800; color: white; }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 12px 32px rgba(245, 158, 11, 0.6); }
+    }
+    
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1a1a2e;
+      border-radius: 32px 32px 0 0;
+      padding: 24px 20px 32px;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+      animation: slideUp 0.3s;
+      max-width: 480px;
+      margin: 0 auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 100;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .bottom-sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      margin: 0 auto 20px;
+    }
+    
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .setting-label { display: flex; align-items: center; gap: 12px; color: white; font-weight: 500; }
+    .setting-icon { font-size: 24px; opacity: 0.8; }
+    
+    .toggle-switch {
+      width: 52px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .toggle-switch.active { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 22px;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+    
+    .toggle-switch.active::after { transform: translateX(24px); }
+    
+    .hint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: rgba(139, 92, 246, 0.15);
+      border-radius: 40px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: #a78bfa;
+      font-weight: 500;
+    }
+    
+    .fade-in { animation: fadeIn 0.3s; }
+    .scale-in { animation: scaleIn 0.2s; }
+    
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .opponent-tile {
+      width: 60px;
+      height: 80px;
+      background: linear-gradient(145deg, #2d3748 0%, #1a202c 100%);
+      border-radius: 10px;
+      box-shadow: 0 4px 0 #111, 0 6px 12px rgba(0, 0, 0, 0.3);
+      border: 1px solid #4a5568;
+    }
+    
+    input {
+      width: 100%;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+    
+    input::placeholder { color: rgba(255, 255, 255, 0.3); }
+    input:focus { border-color: #6366f1; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    // ============================================
+    // COMPLETE DOMINOES GAME - ALL IN ONE FILE
+    // ============================================
+    
+    import React, { useState, useEffect, useReducer } from 'react';
+    import ReactDOM from 'react-dom/client';
+    
+    // ---------- Game Logic ----------
+    const createDeck = () => {
+      const tiles = [];
+      for (let i = 0; i <= 6; i++) {
+        for (let j = i; j <= 6; j++) {
+          tiles.push([i, j]);
+        }
+      }
+      return shuffle(tiles);
+    };
+    
+    const shuffle = (array) => {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+    
+    const dealHands = (deck, numPlayers, tilesPerHand = 7) => {
+      const hands = Array.from({ length: numPlayers }, () => []);
+      const deckCopy = [...deck];
+      for (let i = 0; i < tilesPerHand; i++) {
+        for (let p = 0; p < numPlayers; p++) {
+          if (deckCopy.length) hands[p].push(deckCopy.pop());
+        }
+      }
+      return { hands, boneyard: deckCopy };
+    };
+    
+    const isValidMove = (tile, endpoints) => {
+      const [left, right] = endpoints;
+      if (left === null && right === null) return true;
+      return tile[0] === left || tile[1] === left || tile[0] === right || tile[1] === right;
+    };
+    
+    const getPlayableTiles = (hand, endpoints) => {
+      return hand.filter(tile => isValidMove(tile, endpoints));
+    };
+    
+    const applyMove = (board, tile, position, endpoints) => {
+      let newBoard = [...board];
+      let newEndpoints = [...endpoints];
+      
+      if (board.length === 0) {
+        newBoard = [{ tile, side: 'center' }];
+        newEndpoints = [tile[0], tile[1]];
+        return { newBoard, newEndpoints };
+      }
+      
+      if (position === 'left') {
+        const leftEndpoint = endpoints[0];
+        const orientedTile = tile[1] === leftEndpoint ? tile : [tile[1], tile[0]];
+        newBoard = [{ tile: orientedTile, side: 'left' }, ...board];
+        newEndpoints[0] = orientedTile[0];
+      } else {
+        const rightEndpoint = endpoints[1];
+        const orientedTile = tile[0] === rightEndpoint ? tile : [tile[1], tile[0]];
+        newBoard = [...board, { tile: orientedTile, side: 'right' }];
+        newEndpoints[1] = orientedTile[1];
+      }
+      
+      return { newBoard, newEndpoints };
+    };
+    
+    const getStartingPlayer = (hands) => {
+      let bestPlayer = 0;
+      let bestValue = -1;
+      hands.forEach((hand, idx) => {
+        hand.forEach(tile => {
+          if (tile[0] === tile[1] && tile[0] > bestValue) {
+            bestValue = tile[0];
+            bestPlayer = idx;
+          }
+        });
+      });
+      if (bestValue === -1) {
+        hands.forEach((hand, idx) => {
+          hand.forEach(tile => {
+            const sum = tile[0] + tile[1];
+            if (sum > bestValue) {
+              bestValue = sum;
+              bestPlayer = idx;
+            }
+          });
+        });
+      }
+      return bestPlayer;
+    };
+    
+    const getAIMove = (hand, endpoints) => {
+      const playable = getPlayableTiles(hand, endpoints);
+      if (playable.length === 0) return { action: 'draw' };
+      
+      let bestTile = playable[0];
+      let bestScore = -1;
+      playable.forEach(tile => {
+        let score = tile[0] + tile[1];
+        if (tile[0] === tile[1]) score += 10;
+        if (score > bestScore) { bestScore = score; bestTile = tile; }
+      });
+      
+      let side = 'right';
+      if (bestTile[0] === endpoints[0] || bestTile[1] === endpoints[0]) side = 'left';
+      return { action: 'play', tile: bestTile, side };
+    };
+    
+    // ---------- Game State Reducer ----------
+    const initialState = {
+      mode: null,
+      players: [],
+      hands: [],
+      board: [],
+      boneyard: [],
+      currentPlayer: 0,
+      endpoints: [null, null],
+      winner: null,
+      trainingHint: null,
+      settings: { glassEffect: true, soundEnabled: false },
+      showSettings: false
+    };
+    
+    function gameReducer(state, action) {
+      switch (action.type) {
+        case 'INIT_GAME': {
+          const { mode } = action;
+          const numPlayers = mode === 'solo' || mode === 'local' ? 2 : 4;
+          const names = Array.from({ length: numPlayers }, (_, i) => 
+            mode === 'solo' ? (i === 0 ? 'You' : 'AI') : `Player ${i+1}`
+          );
+          const deck = createDeck();
+          const { hands, boneyard } = dealHands(deck, numPlayers);
+          const startingPlayer = getStartingPlayer(hands);
+          
+          return {
+            ...state,
+            mode,
+            players: names,
+            hands,
+            board: [],
+            boneyard,
+            currentPlayer: startingPlayer,
+            endpoints: [null, null],
+            winner: null,
+            trainingHint: null,
+          };
+        }
+        
+        case 'PLAY_TILE': {
+          const { playerIdx, tile, side } = action;
+          if (playerIdx !== state.currentPlayer || state.winner !== null) return state;
+          if (!isValidMove(tile, state.endpoints)) return state;
+          
+          const hand = state.hands[playerIdx];
+          const tileIndex = hand.findIndex(t => t[0] === tile[0] && t[1] === tile[1]);
+          if (tileIndex === -1) return state;
+          
+          const newHand = [...hand];
+          newHand.splice(tileIndex, 1);
+          const { newBoard, newEndpoints } = applyMove(state.board, tile, side, state.endpoints);
+          
+          const newHands = [...state.hands];
+          newHands[playerIdx] = newHand;
+          
+          const winner = newHand.length === 0 ? playerIdx : null;
+          const nextPlayer = winner !== null ? state.currentPlayer : (playerIdx + 1) % state.players.length;
+          
+          return {
+            ...state,
+            board: newBoard,
+            endpoints: newEndpoints,
+            hands: newHands,
+            currentPlayer: nextPlayer,
+            winner,
+          };
+        }
+        
+        case 'DRAW_TILE': {
+          const { playerIdx } = action;
+          if (playerIdx !== state.currentPlayer || state.winner !== null) return state;
+          
+          const playable = getPlayableTiles(state.hands[playerIdx], state.endpoints);
+          if (playable.length > 0) return state;
+          
+          if (state.boneyard.length === 0) {
+            const nextPlayer = (playerIdx + 1) % state.players.length;
+            return { ...state, currentPlayer: nextPlayer };
+          }
+          
+          const newBoneyard = [...state.boneyard];
+          const drawnTile = newBoneyard.pop();
+          const newHands = [...state.hands];
+          newHands[playerIdx] = [...newHands[playerIdx], drawnTile];
+          const nextPlayer = (playerIdx + 1) % state.players.length;
+          
+          return {
+            ...state,
+            boneyard: newBoneyard,
+            hands: newHands,
+            currentPlayer: nextPlayer,
+          };
+        }
+        
+        case 'AI_TURN': {
+          if (state.mode !== 'solo' || state.currentPlayer !== 1 || state.winner) return state;
+          const move = getAIMove(state.hands[1], state.endpoints);
+          
+          if (move.action === 'play') {
+            return gameReducer(state, { type: 'PLAY_TILE', playerIdx: 1, tile: move.tile, side: move.side });
+          } else {
+            return gameReducer(state, { type: 'DRAW_TILE', playerIdx: 1 });
+          }
+        }
+        
+        case 'GENERATE_HINT': {
+          const hand = state.hands[state.currentPlayer];
+          const playable = getPlayableTiles(hand, state.endpoints);
+          const hint = playable.length > 0 ? playable.reduce((a, b) => (a[0]+a[1] > b[0]+b[1] ? a : b)) : 'draw';
+          return { ...state, trainingHint: hint };
+        }
+        
+        case 'SET_SETTINGS':
+          return { ...state, settings: { ...state.settings, ...action.settings } };
+          
+        case 'TOGGLE_SETTINGS':
+          return { ...state, showSettings: !state.showSettings };
+          
+        case 'RESET_GAME': {
+          if (!state.mode) return state;
+          const deck = createDeck();
+          const numPlayers = state.mode === 'solo' || state.mode === 'local' ? 2 : 4;
+          const { hands, boneyard } = dealHands(deck, numPlayers);
+          const startingPlayer = getStartingPlayer(hands);
+          return {
+            ...state,
+            hands,
+            board: [],
+            boneyard,
+            currentPlayer: startingPlayer,
+            endpoints: [null, null],
+            winner: null,
+            trainingHint: null,
+          };
+        }
+        
+        default:
+          return state;
+      }
+    }
+    
+    // ---------- Components ----------
+    
+    function DominoTile({ tile, onClick, highlighted = false, small = false }) {
+      if (!tile) return null;
+      const [left, right] = tile;
+      
+      const pipPositions = {
+        0: [], 1: ['center'], 2: ['top-left', 'bottom-right'],
+        3: ['top-left', 'center', 'bottom-right'],
+        4: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        5: ['top-left', 'top-right', 'center', 'bottom-left', 'bottom-right'],
+        6: ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right']
+      };
+      
+      const renderPips = (value) => (
+        <div className="relative w-full h-full">
+          {(pipPositions[value] || []).map((pos, i) => <div key={i} className={`pip ${pos}`} />)}
+        </div>
+      );
+      
+      const sizeClass = small ? 'w-10 h-20' : 'w-16 h-32';
+      
+      return (
+        <div className={`domino-tile ${sizeClass} ${highlighted ? 'highlighted' : ''} ${small ? 'small' : ''}`} onClick={onClick}>
+          <div className="flex-1 border-b border-gray-400 flex items-center justify-center p-1 relative">{renderPips(left)}</div>
+          <div className="flex-1 flex items-center justify-center p-1 relative">{renderPips(right)}</div>
+        </div>
+      );
+    }
+    
+    function PlayerHand({ hand, isCurrentPlayer, onPlayTile, playableTiles = [], hintTile = null, isOpponent = false }) {
+      if (isOpponent) {
+        return (
+          <div className="hand-container">
+            {hand.map((tile, idx) => (
+              tile ? <div key={idx} className="opponent-tile" /> : <div key={idx} className="w-10 h-20 opacity-0" />
+            ))}
+          </div>
+        );
+      }
+      
+      return (
+        <div className="hand-container">
+          {hand.map((tile, idx) => {
+            const isPlayable = playableTiles.some(t => t[0] === tile[0] && t[1] === tile[1]);
+            const isHint = hintTile && typeof hintTile !== 'string' && hintTile[0] === tile[0] && hintTile[1] === tile[1];
+            return (
+              <DominoTile 
+                key={idx} 
+                tile={tile} 
+                onClick={() => isCurrentPlayer && onPlayTile(tile)}
+                highlighted={isCurrentPlayer && (isPlayable || isHint)}
+              />
+            );
+          })}
+        </div>
+      );
+    }
+    
+    function SettingsModal({ onClose, settings, dispatch }) {
+      return (
+        <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
+          <div className="bottom-sheet-handle"></div>
+          <h3 className="text-white text-xl font-bold mb-4 px-2">Settings</h3>
+          
+          <div className="setting-item">
+            <div className="setting-label">
+              <span className="setting-icon">✨</span>
+              <span>Frosted Glass</span>
+            </div>
+            <div 
+              className={`toggle-switch ${settings.glassEffect ? 'active' : ''}`}
+              onClick={() => dispatch({ type: 'SET_SETTINGS', settings: { glassEffect: !settings.glassEffect } })}
+            />
+          </div>
+          
+          <div className="setting-item">
+            <div className="setting-label">
+              <span className="setting-icon">🔊</span>
+              <span>Sound Effects</span>
+            </div>
+            <div 
+              className={`toggle-switch ${settings.soundEnabled ? 'active' : ''}`}
+              onClick={() => dispatch({ type: 'SET_SETTINGS', settings: { soundEnabled: !settings.soundEnabled } })}
+            />
+          </div>
+          
+          <button onClick={onClose} className="w-full btn-primary mt-6">Done</button>
+        </div>
+      );
+    }
+    
+    function StartScreen({ dispatch, onOpenSettings }) {
+      const [showOnlineForm, setShowOnlineForm] = useState(false);
+      
+      const handleModeSelect = (mode) => {
+        if (mode === 'online') {
+          alert('🌐 Online mode requires server. This demo includes Solo, Local, and Training modes.');
+        } else {
+          dispatch({ type: 'INIT_GAME', mode });
+        }
+      };
+      
+      return (
+        <div className="min-h-screen flex flex-col px-5 py-6">
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-2">
+              <span className="text-3xl">🁎</span>
+              <span className="text-white text-xl font-bold">Dominoes</span>
+            </div>
+            <button onClick={onOpenSettings} className="btn-icon">⚙️</button>
+          </div>
+          
+          <div className="text-center mb-10 fade-in">
+            <div className="text-7xl mb-4">🎲</div>
+            <h1 className="text-4xl font-bold text-white mb-2">Let's Play</h1>
+            <p className="text-white/50 text-sm">Choose your game mode</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <button onClick={() => handleModeSelect('solo')} className="relative overflow-hidden rounded-3xl p-5 text-left active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
+              <div className="text-4xl mb-3">🤖</div>
+              <div className="text-white font-bold text-lg mb-1">vs AI</div>
+              <div className="text-white/70 text-xs">Play offline</div>
+            </button>
+            
+            <button onClick={() => handleModeSelect('local')} className="relative overflow-hidden rounded-3xl p-5 text-left active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+              <div className="text-4xl mb-3">👥</div>
+              <div className="text-white font-bold text-lg mb-1">Friends</div>
+              <div className="text-white/70 text-xs">Pass & play</div>
+            </button>
+            
+            <button onClick={() => handleModeSelect('online')} className="relative overflow-hidden rounded-3xl p-5 text-left active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}>
+              <div className="text-4xl mb-3">🌐</div>
+              <div className="text-white font-bold text-lg mb-1">Online</div>
+              <div className="text-white/70 text-xs">Multiplayer</div>
+            </button>
+            
+            <button onClick={() => handleModeSelect('training')} className="relative overflow-hidden rounded-3xl p-5 text-left active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+              <div className="text-4xl mb-3">🎓</div>
+              <div className="text-white font-bold text-lg mb-1">Training</div>
+              <div className="text-white/70 text-xs">Learn & practice</div>
+            </button>
+          </div>
+          
+          <div className="glass-light rounded-2xl p-5">
+            <div className="flex justify-around text-center">
+              <div><div className="text-2xl font-bold text-white">12</div><div className="text-white/40 text-xs">Games</div></div>
+              <div className="w-px bg-white/10" />
+              <div><div className="text-2xl font-bold text-white">8</div><div className="text-white/40 text-xs">Wins</div></div>
+              <div className="w-px bg-white/10" />
+              <div><div className="text-2xl font-bold text-white">🏆</div><div className="text-white/40 text-xs">Streak</div></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    function GameBoard({ state, dispatch, onOpenSettings }) {
+      const { mode, players, hands, board, boneyard, currentPlayer, endpoints, winner, trainingHint, settings } = state;
+      const isLocalGame = mode === 'local' || mode === 'solo' || mode === 'training';
+      const humanIdx = 0;
+      
+      const handleTileClick = (tile) => {
+        if (!isLocalGame || currentPlayer !== humanIdx) return;
+        const side = (tile[0] === endpoints[1] || tile[1] === endpoints[1]) ? 'right' : 'left';
+        dispatch({ type: 'PLAY_TILE', playerIdx: humanIdx, tile, side });
+      };
+      
+      const handleDraw = () => {
+        if (currentPlayer === humanIdx) dispatch({ type: 'DRAW_TILE', playerIdx: humanIdx });
+      };
+      
+      const playable = isLocalGame && hands[humanIdx] ? getPlayableTiles(hands[humanIdx], endpoints) : [];
+      const canPlay = playable.length > 0;
+      const isMyTurn = currentPlayer === humanIdx && !winner;
+      
+      useEffect(() => {
+        if (mode === 'solo' && currentPlayer === 1 && !winner) {
+          const timer = setTimeout(() => dispatch({ type: 'AI_TURN' }), 500);
+          return () => clearTimeout(timer);
+        }
+      }, [mode, currentPlayer, winner]);
+      
+      useEffect(() => {
+        if (mode === 'training' && currentPlayer === 0 && !winner) {
+          dispatch({ type: 'GENERATE_HINT' });
+        }
+      }, [mode, currentPlayer, winner, hands[0]]);
+      
+      return (
+        <div className="min-h-screen flex flex-col">
+          <div className="status-bar">
+            <button onClick={onOpenSettings} className="btn-icon">⚙️</button>
+            
+            {winner !== null ? (
+              <div className="winner-banner">
+                <div className="winner-text">🏆 {players[winner]} Wins! 🏆</div>
+              </div>
+            ) : (
+              <div className="player-badge">
+                <div className="player-avatar">{players[currentPlayer]?.charAt(0) || '?'}</div>
+                <div className="flex flex-col">
+                  <span className="player-name">{players[currentPlayer]}</span>
+                  <span className="player-status">Current Turn</span>
+                </div>
+                <div className="turn-indicator"></div>
+              </div>
+            )}
+            
+            <button onClick={() => dispatch({ type: 'RESET_GAME' })} className="btn-icon">🔄</button>
+          </div>
+          
+          {players.length > 1 && (
+            <div className="px-4 mb-2">
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`turn-indicator ${currentPlayer === 1 ? '' : 'waiting'}`}></div>
+                <span className="text-white/60 text-sm">{players[1]}</span>
+                <span className="text-white/30 text-xs ml-auto">{hands[1]?.filter(t => t).length || 0} tiles</span>
+              </div>
+              <PlayerHand hand={hands[1] || []} isOpponent={true} />
+            </div>
+          )}
+          
+          <div className="flex-1 flex flex-col justify-center px-4 py-3">
+            <div className="flex items-stretch gap-3">
+              <div className="boneyard">
+                <div className="boneyard-count">{boneyard.length}</div>
+                <div className="boneyard-label">DRAW</div>
+              </div>
+              
+              <div className="game-board flex-1">
+                {board.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2 opacity-50">🎲</div>
+                      <div className="text-white/50 text-sm">
+                        {isMyTurn ? 'Play your first tile' : 'Waiting for first move...'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 items-center justify-center min-h-full">
+                    {board.map((item, idx) => <DominoTile key={idx} tile={item.tile} small />)}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {endpoints[0] !== null && (
+              <div className="flex justify-between mt-2 px-2">
+                <div className="text-white/40 text-xs bg-white/5 px-3 py-1 rounded-full">← {endpoints[0]}</div>
+                <div className="text-white/40 text-xs bg-white/5 px-3 py-1 rounded-full">{endpoints[1]} →</div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-auto pb-6">
+            <div className="flex items-center justify-between px-5 mb-2">
+              <div className="flex items-center gap-3">
+                <div className={`turn-indicator ${isMyTurn ? '' : 'waiting'}`}></div>
+                <span className="text-white font-medium">Your Hand</span>
+              </div>
+              <span className="text-white/40 text-sm">{hands[0]?.length || 0} tiles</span>
+            </div>
+            
+            <PlayerHand 
+              hand={hands[0] || []} 
+              isCurrentPlayer={isMyTurn}
+              onPlayTile={handleTileClick}
+              playableTiles={playable}
+              hintTile={trainingHint}
+            />
+            
+            {isMyTurn && (
+              <div className="px-5 mt-4">
+                {!canPlay && (
+                  <button onClick={handleDraw} className="w-full py-4 rounded-2xl font-semibold text-white active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}>
+                    Draw Tile {boneyard.length > 0 ? `(${boneyard.length} left)` : '(Empty - Pass)'}
+                  </button>
+                )}
+                {trainingHint === 'draw' && (
+                  <div className="hint-badge mt-3 justify-center">💡 Hint: Draw a tile</div>
+                )}
+                {trainingHint && typeof trainingHint !== 'string' && (
+                  <div className="hint-badge mt-3 justify-center">💡 Hint: Play highlighted tile</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    function App() {
+      const [state, dispatch] = useReducer(gameReducer, initialState);
+      
+      return (
+        <div className={`mobile-container ${state.settings.glassEffect ? 'glass' : ''}`}>
+          {!state.mode ? (
+            <StartScreen dispatch={dispatch} onOpenSettings={() => dispatch({ type: 'TOGGLE_SETTINGS' })} />
+          ) : (
+            <GameBoard state={state} dispatch={dispatch} onOpenSettings={() => dispatch({ type: 'TOGGLE_SETTINGS' })} />
+          )}
+          
+          {state.showSettings && (
+            <SettingsModal 
+              onClose={() => dispatch({ type: 'TOGGLE_SETTINGS' })} 
+              settings={state.settings} 
+              dispatch={dispatch} 
+            />
+          )}
+        </div>
+      );
+    }
+    
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
