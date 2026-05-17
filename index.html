@@ -263,19 +263,18 @@ body.bg-noblur #bgl{filter:brightness(.68)}
 /* ════════════════════════════════════
    SCREEN 6: SHOP
 ════════════════════════════════════ */
-#sq{background:transparent}
+#sq{background:transparent;display:flex;flex-direction:column}
 .shop-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px 20px}
-.shop-ico-wrap{width:90px;height:90px;border-radius:24px;background:rgba(74,144,196,.1);border:1px solid rgba(74,144,196,.2);display:flex;align-items:center;justify-content:center;animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-.shop-ico-wrap svg{width:44px;height:44px;stroke:var(--bl);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.shop-ico-wrap{width:90px;height:90px;border-radius:24px;background:rgba(74,144,196,.1);border:1px solid rgba(74,144,196,.2);display:flex;align-items:center;justify-content:center}
 .shop-title{font-family:'Cinzel',serif;font-size:22px;color:var(--a1);letter-spacing:3px}
 .shop-sub{font-size:13px;color:var(--tx2);text-align:center;max-width:260px;line-height:1.7}
 .shop-badge{padding:7px 20px;background:rgba(var(--a1r),.12);border:1px solid rgba(var(--a1r),.3);border-radius:20px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;color:var(--a1);text-transform:uppercase}
+.shop-body-new{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 40px}
 
 /* ════════════════════════════════════
    SCREEN 7: SETTINGS
 ════════════════════════════════════ */
-#ss{background:transparent}
+#ss{background:transparent;display:flex;flex-direction:column}
 .sg{display:flex;flex-direction:column;gap:8px;padding:0 16px}
 .sgt{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--tx3);padding-bottom:4px;border-bottom:1px solid var(--bd);margin:0 -16px;padding-left:16px;padding-right:16px}
 .sdiv{height:1px;background:var(--bd)}
@@ -343,7 +342,7 @@ body.bg-noblur #bgl{filter:brightness(.68)}
 .insta-arr svg{width:15px;height:15px;stroke:var(--tx3);fill:none;stroke-width:2;stroke-linecap:round}
 .about-txt{font-size:12px;color:var(--tx2);line-height:1.8;padding:12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r)}
 .ver-txt{text-align:center;font-size:10px;color:var(--tx3);letter-spacing:2px;padding:4px}
-.settings-scroll{padding:14px 0 24px;display:flex;flex-direction:column;gap:18px}
+.settings-scroll{padding:14px 0 80px;display:flex;flex-direction:column;gap:18px}
 
 /* ════════════════════════════════════
    GAME SCREEN
@@ -606,6 +605,222 @@ body.skin-neon .tw:not(.afd) svg circle{fill:#00ffcc!important}
 body.skin-rose .tw:not(.afd) svg rect:first-child{fill:#1a0810!important;stroke:#e87a9a!important}
 body.skin-green .tw:not(.afd) svg rect:first-child{fill:#041408!important;stroke:#4abf7a!important}
 
+
+/* ════════════════════════════════════
+   SHOP OVERHAUL v2
+════════════════════════════════════ */
+/* REMOVE OLD 2D SHOP ITEM STYLES */
+.shop-items{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+
+/* 3D CARD STYLE */
+.shop-item{
+  background:linear-gradient(160deg,var(--bg3) 0%,var(--bg2) 100%);
+  border:1px solid var(--bd);
+  border-radius:18px;
+  padding:16px 10px 14px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  cursor:pointer;
+  transition:all .28s cubic-bezier(.34,1.2,.64,1);
+  position:relative;overflow:hidden;
+  box-shadow:0 4px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.shop-item::before{
+  content:'';position:absolute;inset:0;border-radius:18px;
+  background:linear-gradient(160deg,rgba(255,255,255,.05) 0%,transparent 60%);
+  pointer-events:none;
+}
+.shop-item:hover{
+  transform:translateY(-5px) scale(1.02);
+  box-shadow:0 12px 36px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);
+  border-color:rgba(var(--a1r),.5);
+}
+.shop-item:active{transform:translateY(-2px) scale(1.01)}
+.shop-item.owned{
+  border-color:rgba(74,191,122,.35);
+  background:linear-gradient(160deg,rgba(74,191,122,.08) 0%,var(--bg2) 100%);
+}
+.shop-item.equipped{
+  border-color:rgba(var(--a1r),.6);
+  background:linear-gradient(160deg,rgba(var(--a1r),.14) 0%,var(--bg2) 100%);
+  box-shadow:0 0 24px rgba(var(--a1r),.18),0 4px 18px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.shop-item.equipped::after{
+  content:'';position:absolute;inset:0;border-radius:18px;
+  background:linear-gradient(160deg,rgba(var(--a1r),.08) 0%,transparent 50%);
+  pointer-events:none;
+}
+.shop-item-preview{
+  width:56px;height:84px;
+  display:flex;align-items:center;justify-content:center;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));
+  transition:transform .3s;
+}
+.shop-item:hover .shop-item-preview{transform:translateY(-3px) rotate(-2deg)}
+.shop-item-name{font-size:12px;font-weight:700;color:var(--tx);text-align:center;letter-spacing:.5px}
+.shop-item-price{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:700;
+  padding:4px 10px;border-radius:12px;
+}
+.shop-item-price.coins{
+  background:rgba(212,160,23,.15);color:#f0c840;
+  border:1px solid rgba(212,160,23,.3);
+}
+.shop-item-price.gems{
+  background:rgba(100,160,255,.15);color:#88c0ff;
+  border:1px solid rgba(100,160,255,.3);
+}
+.shop-item-price.free{
+  background:rgba(74,191,122,.12);color:#4abf7a;
+  border:1px solid rgba(74,191,122,.25);
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;
+}
+.shop-item-badge{
+  position:absolute;top:8px;right:8px;
+  padding:2px 8px;border-radius:10px;
+  font-size:8px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+}
+.shop-item-badge.owned-b{background:rgba(74,191,122,.25);color:#4abf7a;border:1px solid rgba(74,191,122,.4)}
+.shop-item-badge.equip-b{background:rgba(var(--a1r),.25);color:var(--a1);border:1px solid rgba(var(--a1r),.5)}
+.shop-item-badge.new-b{background:rgba(224,82,82,.2);color:#ff7b7b;border:1px solid rgba(224,82,82,.35)}
+
+/* SECTION TITLE improved */
+.shop-sec-title{
+  font-family:'Cinzel',serif;
+  font-size:10px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--tx2);margin-bottom:12px;margin-top:4px;
+  display:flex;align-items:center;gap:10px;
+}
+.shop-sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--bd2),transparent)}
+
+/* BUNDLES improved */
+.shop-bundle{
+  display:flex;align-items:center;gap:14px;
+  padding:16px;
+  background:linear-gradient(135deg,var(--bg3),var(--bg2));
+  border:1px solid var(--bd);border-radius:14px;cursor:pointer;
+  transition:all .25s;
+  box-shadow:0 3px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);
+  position:relative;overflow:hidden;
+}
+.shop-bundle::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.04) 0%,transparent 60%);
+  pointer-events:none;
+}
+.shop-bundle:hover{
+  transform:translateX(4px);
+  border-color:rgba(var(--a1r),.4);
+  box-shadow:0 6px 20px rgba(0,0,0,.4);
+}
+.shop-bundle.gems-bundle:hover{border-color:rgba(100,160,255,.5)}
+.shop-bundle-ico{font-size:30px;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+.shop-bundle-info{flex:1}
+.shop-bundle-name{font-size:14px;font-weight:700;color:var(--tx)}
+.shop-bundle-desc{font-size:11px;color:var(--tx3);margin-top:2px;line-height:1.4}
+.shop-bundle-price{
+  font-size:14px;font-weight:800;
+  padding:6px 12px;border-radius:12px;
+  text-align:right;flex-shrink:0;
+  background:rgba(100,160,255,.12);
+  color:#88c0ff;
+  border:1px solid rgba(100,160,255,.25);
+}
+.shop-bundle-price.coin-price{
+  background:rgba(212,160,23,.12);color:#f0c840;
+  border:1px solid rgba(212,160,23,.25);
+}
+
+/* CONVERT ROW */
+.shop-convert-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;
+}
+.shop-convert-card{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:16px 10px;
+  background:linear-gradient(160deg,var(--bg3),var(--bg2));
+  border:1px solid var(--bd);border-radius:14px;cursor:pointer;
+  transition:all .25s;
+  box-shadow:0 3px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.shop-convert-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.4)}
+.shop-convert-from{font-size:20px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.shop-convert-arrow{font-size:14px;color:var(--tx3)}
+.shop-convert-to{font-size:20px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.shop-convert-rate{font-size:10px;color:var(--tx3);text-align:center;line-height:1.4}
+.shop-convert-btn{
+  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:4px 12px;border-radius:10px;
+}
+.shop-convert-card.c2g .shop-convert-btn{background:rgba(100,160,255,.15);color:#88c0ff;border:1px solid rgba(100,160,255,.3)}
+.shop-convert-card.g2c .shop-convert-btn{background:rgba(212,160,23,.15);color:#f0c840;border:1px solid rgba(212,160,23,.3)}
+
+/* PROFILE FRAMES in shop */
+.shop-frame-item{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:14px 10px;
+  background:linear-gradient(160deg,var(--bg3),var(--bg2));
+  border:1px solid var(--bd);border-radius:14px;cursor:pointer;
+  transition:all .28s;
+  box-shadow:0 3px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);
+  position:relative;overflow:hidden;
+}
+.shop-frame-item:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.shop-frame-preview{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+  background:var(--bg3);
+  border:3px solid;
+  box-shadow:0 0 14px;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));
+}
+
+/* BANNERS in shop */
+.shop-banners-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.shop-banner-item{
+  height:70px;border-radius:12px;cursor:pointer;
+  border:2px solid var(--bd);
+  transition:all .25s;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+  position:relative;overflow:hidden;
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
+}
+.shop-banner-item:hover{transform:translateX(3px);border-color:rgba(var(--a1r),.5)}
+.shop-banner-item.owned-banner{border-color:rgba(74,191,122,.5)}
+.shop-banner-item.equipped-banner{border-color:var(--a1);box-shadow:0 0 18px rgba(var(--a1r),.2)}
+.shop-banner-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(0,0,0,.2));
+  pointer-events:none;
+}
+.shop-banner-info{position:relative;z-index:1}
+.shop-banner-name{font-size:13px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.shop-banner-price{position:relative;z-index:1;font-size:12px;font-weight:700;padding:4px 10px;border-radius:10px;backdrop-filter:blur(8px)}
+
+/* CARD DOTS improved — much more visible */
+.card-dots{display:flex;gap:9px;padding:4px 8px;background:rgba(0,0,0,.3);border-radius:20px;border:1px solid rgba(255,255,255,.07)}
+.cdot{
+  width:10px;height:10px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+  border:1.5px solid rgba(255,255,255,.3);
+  transition:all .3s;cursor:pointer;
+  box-shadow:0 0 0 0 transparent;
+}
+.cdot:hover{background:rgba(255,255,255,.35);border-color:rgba(255,255,255,.5)}
+.cdot.on{
+  background:var(--a1);
+  border-color:var(--a2);
+  transform:scale(1.4);
+  box-shadow:0 0 8px rgba(var(--a1r),.6),0 0 14px rgba(var(--a1r),.2);
+}
+
+/* GAME MODE SWIPE CARD DOTS — in game modes screen */
+#sm .card-dots{margin-top:4px}
+
+
+@keyframes framePulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--frame-glow,transparent)}50%{opacity:.85;box-shadow:0 0 18px var(--frame-glow,transparent),0 0 32px var(--frame-glow,transparent)}}
 </style>
 </head>
 <body>
@@ -913,13 +1128,13 @@ body.skin-green .tw:not(.afd) svg rect:first-child{fill:#041408!important;stroke
 </div>
 
 <!-- ══ S5: PROFILE ══ -->
-<div class="scr gone" id="sp">
+<div class="scr gone" id="sp" style="display:flex;flex-direction:column">
   <div class="top-bar gs">
     <button class="iBtn" id="prof-back" onclick="goSc(prevSc)"><svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg></button>
     <div class="top-title" id="prof-title">Profile</div>
     <div style="width:34px"></div>
   </div>
-  <div class="prof-body">
+  <div class="prof-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <div class="prof-banner" id="pp-banner">
       <div class="prof-av-wrap" id="pp-av">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -987,12 +1202,39 @@ body.skin-green .tw:not(.afd) svg rect:first-child{fill:#041408!important;stroke
         <div class="shop-bal-info"><div class="shop-bal-val" id="shop-gems">0</div><div class="shop-bal-lbl">Diamonds</div></div>
       </div>
     </div>
+    <!-- Convert -->
+    <div class="shop-sec-title">🔄 Convert</div>
+    <div class="shop-convert-row">
+      <div class="shop-convert-card c2g" onclick="shopConvert('c2g')">
+        <div class="shop-convert-from">🪙</div>
+        <div class="shop-convert-arrow">↓</div>
+        <div class="shop-convert-to">💎</div>
+        <div class="shop-convert-rate">500 coins<br>→ 1 diamond</div>
+        <div class="shop-convert-btn">Convert</div>
+      </div>
+      <div class="shop-convert-card g2c" onclick="shopConvert('g2c')">
+        <div class="shop-convert-from">💎</div>
+        <div class="shop-convert-arrow">↓</div>
+        <div class="shop-convert-to">🪙</div>
+        <div class="shop-convert-rate">1 diamond<br>→ 80 coins</div>
+        <div class="shop-convert-btn">Convert</div>
+      </div>
+    </div>
     <!-- Tile Skins -->
     <div class="shop-sec-title">🎨 Tile Skins</div>
     <div class="shop-items" id="shop-skins"></div>
-    <!-- Coin Bundles -->
+    <!-- Profile Frames -->
+    <div class="shop-sec-title">✨ Profile Frames</div>
+    <div class="shop-items" id="shop-frames"></div>
+    <!-- Banners -->
+    <div class="shop-sec-title">🖼 Banners</div>
+    <div class="shop-banners-grid" id="shop-banners-list"></div>
+    <!-- Diamond Bundles -->
     <div class="shop-sec-title">💎 Diamond Bundles</div>
     <div class="shop-bundles" id="shop-bundles"></div>
+    <!-- Coin Packs -->
+    <div class="shop-sec-title">🪙 Coin Packs</div>
+    <div class="shop-bundles" id="shop-coin-packs"></div>
   </div>
 </div>
 
@@ -1019,13 +1261,13 @@ body.skin-green .tw:not(.afd) svg rect:first-child{fill:#041408!important;stroke
 </div>
 
 <!-- ══ S7: SETTINGS ══ -->
-<div class="scr gone" id="ss">
+<div class="scr gone" id="ss" style="display:flex;flex-direction:column">
   <div class="top-bar gs">
     <button class="iBtn" id="set-back" onclick="goSc(prevSc)"><svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg></button>
     <div class="top-title" id="set-title">Settings</div>
     <div style="width:34px"></div>
   </div>
-  <div class="scroll-body">
+  <div class="scroll-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <div class="settings-scroll">
 
       <!-- Language -->
@@ -1305,13 +1547,13 @@ function showToast(msg,emoji){
 // DAILY REWARD SYSTEM
 // ════════════════════════════════════════════════
 var DAILY_SCHEDULE = [
+  {ico:'🪙',label:'Coins',coins:30,gems:0},
   {ico:'🪙',label:'Coins',coins:50,gems:0},
   {ico:'🪙',label:'Coins',coins:80,gems:0},
-  {ico:'💎',label:'Diamonds',coins:0,gems:1},
-  {ico:'🪙',label:'Coins',coins:120,gems:0},
-  {ico:'🎁',label:'Bonus',coins:100,gems:2},
-  {ico:'💎',label:'Diamonds',coins:50,gems:3},
-  {ico:'👑',label:'Big Prize',coins:300,gems:5},
+  {ico:'🎁',label:'Bonus',coins:120,gems:0},
+  {ico:'🪙',label:'Coins',coins:150,gems:0},
+  {ico:'🪙',label:'Coins',coins:200,gems:0},
+  {ico:'👑',label:'Week Prize',coins:300,gems:1},
 ];
 
 function getDailyState(){
@@ -1337,6 +1579,8 @@ function buildDailyScreen(){
   if(btn)btn.disabled=!avail;
   var dot=document.getElementById('daily-dot');
   if(dot)dot.style.display=avail?'block':'none';
+  var nlbl=document.getElementById('daily-next-lbl');
+  if(nlbl)nlbl.textContent=avail?'':'Next reward in: '+timeToMidnight();
   // build 7-day grid
   var grid=document.getElementById('daily-grid');if(!grid)return;
   grid.innerHTML='';
@@ -1421,63 +1665,219 @@ function giveGameReward(winner){
 }
 
 // ════════════════════════════════════════════════
-// SHOP LOGIC
+// SHOP LOGIC v2 — FULL OVERHAUL
 // ════════════════════════════════════════════════
 var SHOP_SKINS=[
-  {id:'default',name:'Classic',preview:'classic',price:0,currency:'coins',owned:true},
-  {id:'gold',name:'Gold',preview:'gold',price:200,currency:'coins'},
-  {id:'dark',name:'Midnight',preview:'dark',price:350,currency:'coins'},
-  {id:'neon',name:'Neon',preview:'neon',price:500,currency:'coins'},
-  {id:'rose',name:'Rose',preview:'rose',price:150,currency:'coins'},
-  {id:'green',name:'Forest',preview:'green',price:150,currency:'coins'},
+  {id:'default',name:'Classic',price:0,currency:'coins',owned:true,
+   fill:'#f5efd8',stroke:'#c8b888',pip:'#1a0e06',glow:'rgba(200,184,136,.4)'},
+  {id:'gold',name:'Gold',price:200,currency:'coins',
+   fill:'#1e1400',stroke:'#d4a017',pip:'#f0c840',glow:'rgba(212,160,23,.6)'},
+  {id:'dark',name:'Midnight',price:350,currency:'coins',
+   fill:'#06060e',stroke:'#4a5070',pip:'#8090c0',glow:'rgba(74,80,112,.5)'},
+  {id:'neon',name:'Neon',price:3,currency:'gems',
+   fill:'#04041a',stroke:'#00ffcc',pip:'#00ffcc',glow:'rgba(0,255,204,.7)'},
+  {id:'rose',name:'Rose',price:150,currency:'coins',
+   fill:'#1a0810',stroke:'#e87a9a',pip:'#ffaac4',glow:'rgba(232,122,154,.5)'},
+  {id:'green',name:'Forest',price:150,currency:'coins',
+   fill:'#041408',stroke:'#4abf7a',pip:'#7de0a8',glow:'rgba(74,191,122,.5)'},
+];
+
+var SHOP_FRAMES=[
+  {id:'none',name:'Default',price:0,currency:'coins',owned:true,
+   color:'rgba(var(--a1r),.5)',glow:'transparent',label:'Plain'},
+  {id:'gold',name:'Gold Ring',price:280,currency:'coins',
+   color:'#d4a017',glow:'rgba(212,160,23,.6)',label:'💛'},
+  {id:'neon',name:'Neon Pulse',price:5,currency:'gems',
+   color:'#00ffcc',glow:'rgba(0,255,204,.7)',label:'💚',animate:true},
+  {id:'royal',name:'Royal',price:10,currency:'gems',
+   color:'linear-gradient(135deg,#8b5cf6,#c084fc)',glow:'rgba(139,92,246,.6)',label:'💜'},
+  {id:'fire',name:'Fire',price:8,currency:'gems',
+   color:'linear-gradient(135deg,#ff6b00,#ffd700)',glow:'rgba(255,107,0,.6)',label:'🔥',animate:true},
+  {id:'ice',name:'Ice',price:6,currency:'gems',
+   color:'linear-gradient(135deg,#60c0ff,#a0e0ff)',glow:'rgba(96,192,255,.6)',label:'❄️'},
+];
+
+var SHOP_BANNERS_DATA=[
+  {id:'none',name:'Default',price:0,currency:'coins',owned:true,
+   bg:'linear-gradient(135deg,var(--bg3),var(--bg4))'},
+  {id:'sunset',name:'Sunset',price:180,currency:'coins',
+   bg:'linear-gradient(135deg,#1a0020,#8b1060,#ff6b35)'},
+  {id:'ocean',name:'Ocean',price:180,currency:'coins',
+   bg:'linear-gradient(135deg,#001428,#003880,#0080c0)'},
+  {id:'forest',name:'Forest',price:180,currency:'coins',
+   bg:'linear-gradient(135deg,#011a08,#085020,#14a040)'},
+  {id:'space',name:'Space',price:300,currency:'coins',
+   bg:'linear-gradient(135deg,#04030e,#180830,#3010a0)'},
+  {id:'fire',name:'Inferno',price:4,currency:'gems',
+   bg:'linear-gradient(135deg,#1a0400,#801000,#ff3000,#ff9000)'},
+  {id:'prism',name:'Prism',price:8,currency:'gems',
+   bg:'linear-gradient(135deg,#100020,#400080,#0060ff,#00d0a0,#60ff00)'},
 ];
 
 var SHOP_BUNDLES=[
-  {id:'b_starter',ico:'💎',name:'Starter Pack',desc:'50 diamonds for a great start',price:99,gems:50},
-  {id:'b_mid',ico:'💎💎',name:'Crystal Cache',desc:'200 diamonds — best value',price:349,gems:200},
-  {id:'b_big',ico:'👑',name:'Royal Vault',desc:'600 diamonds + bonus coins',price:799,gems:600,bonus:300},
+  {id:'b_starter',ico:'💎',name:'Starter Pack',desc:'50 diamonds to get started',price:499,currency:'coins',gems:50},
+  {id:'b_mid',ico:'💎💎',name:'Crystal Cache',desc:'200 diamonds — best ratio',price:1499,currency:'coins',gems:200},
+  {id:'b_big',ico:'👑',name:'Royal Vault',desc:'600 diamonds + 500 bonus coins',price:3499,currency:'coins',gems:600,bonus:500},
+];
+
+var SHOP_COIN_PACKS=[
+  {id:'cp_1',ico:'🪙',name:'Coin Pouch',desc:'100 coins to spend',price:2,currency:'gems',coins:100},
+  {id:'cp_2',ico:'🪙🪙',name:'Coin Sack',desc:'300 coins — good value',price:5,currency:'gems',coins:300},
+  {id:'cp_3',ico:'💰',name:'Coin Chest',desc:'800 coins + bonus 100',price:10,currency:'gems',coins:800,bonus:100},
 ];
 
 var EQUIPPED_SKIN='default';
+var EQUIPPED_FRAME='none';
+var EQUIPPED_BANNER_ID='none';
 
 function loadShop(){
-  try{var s=localStorage.getItem('dshop');if(s){var d=JSON.parse(s);EQUIPPED_SKIN=d.equip||'default';var owned=d.owned||[];owned.forEach(function(id){var sk=SHOP_SKINS.find(function(x){return x.id===id;});if(sk)sk.owned=true;});}}catch(e){}
-  applySkin();
+  try{
+    var s=localStorage.getItem('dshop2');
+    if(s){
+      var d=JSON.parse(s);
+      EQUIPPED_SKIN=d.equip||'default';
+      EQUIPPED_FRAME=d.frame||'none';
+      EQUIPPED_BANNER_ID=d.banner||'none';
+      var owned=d.owned||[];
+      owned.forEach(function(id){
+        var sk=SHOP_SKINS.find(function(x){return x.id===id;});if(sk)sk.owned=true;
+        var fr=SHOP_FRAMES.find(function(x){return x.id===id;});if(fr)fr.owned=true;
+        var bn=SHOP_BANNERS_DATA.find(function(x){return x.id===id;});if(bn)bn.owned=true;
+      });
+    }
+  }catch(e){}
+  applySkin();applyFrame();applyBannerEq();
 }
 function saveShop(){
-  var owned=SHOP_SKINS.filter(function(s){return s.owned;}).map(function(s){return s.id;});
-  try{localStorage.setItem('dshop',JSON.stringify({equip:EQUIPPED_SKIN,owned:owned}));}catch(e){}
+  var owned=[];
+  SHOP_SKINS.forEach(function(s){if(s.owned)owned.push(s.id);});
+  SHOP_FRAMES.forEach(function(f){if(f.owned)owned.push(f.id);});
+  SHOP_BANNERS_DATA.forEach(function(b){if(b.owned)owned.push(b.id);});
+  try{localStorage.setItem('dshop2',JSON.stringify({equip:EQUIPPED_SKIN,frame:EQUIPPED_FRAME,banner:EQUIPPED_BANNER_ID,owned:owned}));}catch(e){}
 }
 function applySkin(){
   ['default','gold','dark','neon','rose','green'].forEach(function(s){document.body.classList.remove('skin-'+s);});
   if(EQUIPPED_SKIN&&EQUIPPED_SKIN!=='default')document.body.classList.add('skin-'+EQUIPPED_SKIN);
 }
+function applyFrame(){
+  // Apply frame to all profile avatars
+  var fr=SHOP_FRAMES.find(function(f){return f.id===EQUIPPED_FRAME;})||SHOP_FRAMES[0];
+  document.querySelectorAll('.home-av,.hdr-pfp,.pp-av-wrap,.g-av').forEach(function(el){
+    el.style.borderColor=fr.color.startsWith('linear')?'#8b5cf6':fr.color;
+    el.style.boxShadow=fr.glow!=='transparent'?'0 0 10px '+fr.glow:'';
+    if(fr.animate)el.style.animation='framePulse 1.5s ease-in-out infinite';
+    else el.style.animation='';
+  });
+}
+function applyBannerEq(){
+  var bn=SHOP_BANNERS_DATA.find(function(b){return b.id===EQUIPPED_BANNER_ID;})||SHOP_BANNERS_DATA[0];
+  var ppBanner=document.getElementById('pp-banner');
+  if(ppBanner&&bn.id!=='none'){ppBanner.style.background=bn.bg;}
+}
 
 function buildShop(){
   updateEcoUI();
-  var skinsEl=document.getElementById('shop-skins');if(!skinsEl)return;
-  skinsEl.innerHTML='';
+  buildShopSkins();
+  buildShopFrames();
+  buildShopBanners();
+  buildShopBundles();
+  buildShopCoinPacks();
+}
+
+function makeTilePreview(skin){
+  var W=44,H=76;
+  var fill=skin.fill||'#f5efd8';
+  var stroke=skin.stroke||'#c8b888';
+  var pip=skin.pip||'#1a0e06';
+  var glow=skin.glow||'transparent';
+  // 3D effect with gradient
+  var glowId='gl'+skin.id;
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="filter:drop-shadow(0 4px 12px '+glow+')">'
+    +'<defs>'
+    +'<linearGradient id="'+glowId+'" x1="0" y1="0" x2="1" y2="1">'
+    +'<stop offset="0%" stop-color="rgba(255,255,255,.18)"/>'
+    +'<stop offset="100%" stop-color="rgba(0,0,0,.12)"/>'
+    +'</linearGradient>'
+    +'</defs>'
+    +'<rect x="2" y="2" width="'+(W-4)+'" height="'+(H-4)+'" rx="6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>'
+    +'<rect x="2" y="2" width="'+(W-4)+'" height="'+(H-4)+'" rx="6" fill="url(#'+glowId+')" stroke="none"/>'
+    +'<line x1="5" y1="38" x2="'+(W-5)+'" y2="38" stroke="'+stroke+'" stroke-width="1.2" opacity=".6"/>'
+    +'<circle cx="'+(W/2)+'" cy="18" r="5.5" fill="'+pip+'" opacity=".9"/>'
+    +'<circle cx="10" cy="52" r="4.5" fill="'+pip+'" opacity=".9"/>'
+    +'<circle cx="'+(W-10)+'" cy="62" r="4.5" fill="'+pip+'" opacity=".9"/>'
+    +'<circle cx="'+(W/2)+'" cy="18" r="2.5" fill="rgba(255,255,255,.4)"/>'
+    +'</svg>';
+}
+
+function buildShopSkins(){
+  var el=document.getElementById('shop-skins');if(!el)return;el.innerHTML='';
   SHOP_SKINS.forEach(function(skin){
     var isOwned=skin.owned||skin.id==='default';
     var isEquipped=EQUIPPED_SKIN===skin.id;
-    var el=document.createElement('div');
-    el.className='shop-item'+(isOwned?' owned':'')+(isEquipped?' equipped':'');
-    // preview tile
-    var previewSvg=makeSkinPreview(skin.id);
+    var d=document.createElement('div');
+    d.className='shop-item'+(isOwned?' owned':'')+(isEquipped?' equipped':'');
     var badge=isEquipped?'<div class="shop-item-badge equip-b">Equipped</div>':
-              isOwned?'<div class="shop-item-badge owned-b">Owned</div>':
-              '<div class="shop-item-badge new-b">New</div>';
-    var priceHtml=isOwned?
-      '<div class="shop-item-price coins">'+(isEquipped?'✓ Active':'Tap to equip')+'</div>':
-      '<div class="shop-item-price '+(skin.currency||'coins')+'">'+skin.price+' '+(skin.currency==='gems'?'💎':'🪙')+'</div>';
-    el.innerHTML=badge+'<div class="shop-item-preview">'+previewSvg+'</div><div class="shop-item-name">'+skin.name+'</div>'+priceHtml;
-    el.onclick=(function(sk){return function(){shopClickSkin(sk);};})(skin);
-    skinsEl.appendChild(el);
+              isOwned?'<div class="shop-item-badge owned-b">Owned</div>':'';
+    var priceHtml=isEquipped?'<div class="shop-item-price free">✓ Active</div>':
+      isOwned?'<div class="shop-item-price free">Equip</div>':
+      '<div class="shop-item-price '+(skin.currency==='gems'?'gems':'coins')+'">'+skin.price+' '+(skin.currency==='gems'?'💎':'🪙')+'</div>';
+    d.innerHTML=badge+'<div class="shop-item-preview">'+makeTilePreview(skin)+'</div>'
+      +'<div class="shop-item-name">'+skin.name+'</div>'+priceHtml;
+    d.onclick=(function(sk){return function(){shopClickSkin(sk);};})(skin);
+    el.appendChild(d);
   });
-  var bundles=document.getElementById('shop-bundles');if(!bundles)return;
-  bundles.innerHTML='';
+}
+
+function makeFramePreview(frame){
+  var borderStyle=frame.color.startsWith('linear')?'border-image:'+frame.color+' 1':'border-color:'+frame.color;
+  var shadow=frame.glow!=='transparent'?'box-shadow:0 0 12px '+frame.glow+',0 0 24px '+frame.glow+';':'';
+  var pulse=frame.animate?'animation:framePulse 1.5s ease-in-out infinite;':'';
+  return '<div style="width:44px;height:44px;border-radius:50%;background:var(--bg3);border:3px solid;'+borderStyle+';'+shadow+pulse+' display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>';
+}
+
+function buildShopFrames(){
+  var el=document.getElementById('shop-frames');if(!el)return;el.innerHTML='';
+  SHOP_FRAMES.forEach(function(frame){
+    var isOwned=frame.owned||frame.id==='none';
+    var isEquipped=EQUIPPED_FRAME===frame.id;
+    var d=document.createElement('div');
+    d.className='shop-item'+(isOwned?' owned':'')+(isEquipped?' equipped':'');
+    var badge=isEquipped?'<div class="shop-item-badge equip-b">Active</div>':
+              isOwned?'<div class="shop-item-badge owned-b">Owned</div>':'';
+    var priceHtml=isEquipped?'<div class="shop-item-price free">✓ Active</div>':
+      isOwned?'<div class="shop-item-price free">Equip</div>':
+      '<div class="shop-item-price '+(frame.currency==='gems'?'gems':'coins')+'">'+frame.price+' '+(frame.currency==='gems'?'💎':'🪙')+'</div>';
+    d.innerHTML=badge+'<div class="shop-item-preview" style="height:auto;padding:8px 0">'+makeFramePreview(frame)+'</div>'
+      +'<div class="shop-item-name">'+frame.name+'</div>'+priceHtml;
+    d.onclick=(function(fr){return function(){shopClickFrame(fr);};})(frame);
+    el.appendChild(d);
+  });
+}
+
+function buildShopBanners(){
+  var el=document.getElementById('shop-banners-list');if(!el)return;el.innerHTML='';
+  SHOP_BANNERS_DATA.forEach(function(banner){
+    var isOwned=banner.owned||banner.id==='none';
+    var isEquipped=EQUIPPED_BANNER_ID===banner.id;
+    var d=document.createElement('div');
+    d.className='shop-banner-item'+(isOwned?' owned-banner':'')+(isEquipped?' equipped-banner':'');
+    d.style.background=banner.bg;
+    var priceHtml=isEquipped?
+      '<div class="shop-banner-price" style="background:rgba(var(--a1r),.3);color:var(--a1)">✓ Active</div>':
+      isOwned?'<div class="shop-banner-price" style="background:rgba(74,191,122,.25);color:#4abf7a">Equip</div>':
+      '<div class="shop-banner-price '+(banner.currency==='gems'?'':'coin-price')+'">'+banner.price+' '+(banner.currency==='gems'?'💎':'🪙')+'</div>';
+    d.innerHTML='<div class="shop-banner-overlay"></div>'
+      +'<div class="shop-banner-info"><div class="shop-banner-name">'+banner.name+'</div></div>'
+      +priceHtml;
+    d.onclick=(function(bn){return function(){shopClickBanner(bn);};})(banner);
+    el.appendChild(d);
+  });
+}
+
+function buildShopBundles(){
+  var bundles=document.getElementById('shop-bundles');if(!bundles)return;bundles.innerHTML='';
   SHOP_BUNDLES.forEach(function(b){
-    var el=document.createElement('div');el.className='shop-bundle';
+    var el=document.createElement('div');el.className='shop-bundle gems-bundle';
     el.innerHTML='<div class="shop-bundle-ico">'+b.ico+'</div>'
       +'<div class="shop-bundle-info"><div class="shop-bundle-name">'+b.name+'</div><div class="shop-bundle-desc">'+b.desc+'</div></div>'
       +'<div class="shop-bundle-price">'+b.price+' 🪙</div>';
@@ -1485,40 +1885,79 @@ function buildShop(){
     bundles.appendChild(el);
   });
 }
-function makeSkinPreview(skinId){
-  var fill='var(--tf)';var stroke='var(--ts)';var pip='var(--tp)';var double=false;
-  if(skinId==='gold'){fill='#2a1e08';stroke='#c9a84c';}
-  else if(skinId==='dark'){fill='#0a0a14';stroke='#444';}
-  else if(skinId==='neon'){fill='#080820';stroke='#00ffcc';pip='#00ffcc';}
-  else if(skinId==='rose'){fill='#1a0810';stroke='#e87a9a';}
-  else if(skinId==='green'){fill='#041408';stroke='#4abf7a';}
-  var W=36,H=64;
-  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'
-    +'<rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" rx="4" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5"/>'
-    +'<line x1="4" y1="32" x2="'+(W-4)+'" y2="32" stroke="'+stroke+'" stroke-width=".7" opacity=".5"/>'
-    +'<circle cx="18" cy="16" r="4" fill="'+pip+'"/>'
-    +'<circle cx="10" cy="44" r="4" fill="'+pip+'"/><circle cx="26" cy="52" r="4" fill="'+pip+'"/>'
-    +'</svg>';
+
+function buildShopCoinPacks(){
+  var el=document.getElementById('shop-coin-packs');if(!el)return;el.innerHTML='';
+  SHOP_COIN_PACKS.forEach(function(p){
+    var d=document.createElement('div');d.className='shop-bundle';
+    d.innerHTML='<div class="shop-bundle-ico">'+p.ico+'</div>'
+      +'<div class="shop-bundle-info"><div class="shop-bundle-name">'+p.name+'</div><div class="shop-bundle-desc">'+p.desc+'</div></div>'
+      +'<div class="shop-bundle-price">'+p.price+' 💎</div>';
+    d.onclick=(function(pk){return function(){shopBuyCoinPack(pk);};})(p);
+    el.appendChild(d);
+  });
 }
+
 function shopClickSkin(skin){
   var isOwned=skin.owned||skin.id==='default';
-  if(isOwned){EQUIPPED_SKIN=skin.id;applySkin();saveShop();buildShop();showToast('Skin equipped: '+skin.name,'🎨');return;}
+  if(isOwned){EQUIPPED_SKIN=skin.id;applySkin();saveShop();buildShopSkins();showToast(skin.name+' equipped','🎨');return;}
   if(skin.currency==='gems'){
-    if(!spendGems(skin.price)){showToast('Not enough diamonds!','💎');return;}
-  } else {
-    if(!spendCoins(skin.price)){showToast('Not enough coins!','🪙');return;}
+    if(!spendGems(skin.price)){showToast('Need '+skin.price+' 💎 diamonds!','');return;}
+  }else{
+    if(!spendCoins(skin.price)){showToast('Need '+skin.price+' 🪙 coins!','');return;}
   }
-  skin.owned=true;EQUIPPED_SKIN=skin.id;applySkin();saveShop();buildShop();
-  showPrize('New Skin!',''+skin.name+' unlocked!',[{ico:'🎨',val:skin.name,lbl:'Equipped'}],'🎉');
+  skin.owned=true;EQUIPPED_SKIN=skin.id;applySkin();saveShop();buildShopSkins();
+  showPrize('New Skin!',skin.name+' unlocked!',[{ico:'🎨',val:skin.name,lbl:'Equipped'}],'🎉');
+}
+function shopClickFrame(frame){
+  var isOwned=frame.owned||frame.id==='none';
+  if(isOwned){EQUIPPED_FRAME=frame.id;applyFrame();saveShop();buildShopFrames();showToast(frame.name+' frame active','✨');return;}
+  if(frame.currency==='gems'){
+    if(!spendGems(frame.price)){showToast('Need '+frame.price+' 💎 diamonds!','');return;}
+  }else{
+    if(!spendCoins(frame.price)){showToast('Need '+frame.price+' 🪙 coins!','');return;}
+  }
+  frame.owned=true;EQUIPPED_FRAME=frame.id;applyFrame();saveShop();buildShopFrames();
+  showPrize('New Frame!',frame.name+' frame unlocked!',[{ico:'✨',val:frame.name,lbl:'Frame'}],'✨');
+}
+function shopClickBanner(banner){
+  var isOwned=banner.owned||banner.id==='none';
+  if(isOwned){EQUIPPED_BANNER_ID=banner.id;applyBannerEq();saveShop();buildShopBanners();showToast(banner.name+' banner active','🖼');return;}
+  if(banner.currency==='gems'){
+    if(!spendGems(banner.price)){showToast('Need '+banner.price+' 💎 diamonds!','');return;}
+  }else{
+    if(!spendCoins(banner.price)){showToast('Need '+banner.price+' 🪙 coins!','');return;}
+  }
+  banner.owned=true;EQUIPPED_BANNER_ID=banner.id;applyBannerEq();saveShop();buildShopBanners();
+  showPrize('New Banner!',banner.name+' unlocked!',[{ico:'🖼',val:banner.name,lbl:'Banner'}],'🖼');
 }
 function shopBuyBundle(bundle){
-  if(!spendCoins(bundle.price)){showToast('Not enough coins!','🪙');return;}
+  if(!spendCoins(bundle.price)){showToast('Need '+bundle.price+' 🪙 coins!','');return;}
   addGems(bundle.gems);
   if(bundle.bonus)addCoins(bundle.bonus);
-  buildShop();
+  buildShopBundles();
   var rew=[{ico:'💎',val:'+'+bundle.gems,lbl:'Diamonds'}];
   if(bundle.bonus)rew.push({ico:'🪙',val:'+'+bundle.bonus,lbl:'Bonus Coins'});
   showPrize('Purchase Complete!',bundle.name+' acquired!',rew,'💎');
+}
+function shopBuyCoinPack(pack){
+  if(!spendGems(pack.price)){showToast('Need '+pack.price+' 💎 diamonds!','');return;}
+  addCoins(pack.coins);
+  if(pack.bonus)addCoins(pack.bonus);
+  buildShopCoinPacks();
+  var rew=[{ico:'🪙',val:'+'+(pack.coins+(pack.bonus||0)),lbl:'Coins'}];
+  showPrize('Coins Purchased!',pack.name+' acquired!',rew,'🪙');
+}
+function shopConvert(dir){
+  if(dir==='c2g'){
+    if(ECO.coins<500){showToast('Need 500 🪙 coins','');return;}
+    if(!spendCoins(500)){return;}
+    addGems(1);showToast('+1 💎 diamond added','💎');
+  }else{
+    if(ECO.gems<1){showToast('No diamonds to convert','');return;}
+    if(!spendGems(1)){return;}
+    addCoins(80);showToast('+80 🪙 coins added','🪙');
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -1880,6 +2319,7 @@ function goSc(id){
   if(id==='ss') buildBgThumbs();
   if(id==='sd'){buildDailyScreen();}
   if(id==='sq'){buildShop();}
+  if(id==='sp'){renderProfile();applyBannerEq();}
 }
 function startGame(){
   ALL_SCR.forEach(function(s){var el=document.getElementById(s);if(el)el.classList.add('gone');});
