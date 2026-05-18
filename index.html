@@ -63,11 +63,10 @@ body.gm-minimal .sopt.on{
 }
 /* Tile bounce on hover */
 body.gm-minimal .tw:not(.ct):not(.afd):not(.inv){
-  transition:transform .26s cubic-bezier(.34,1.7,.64,1),filter .2s;
+  transition:transform .26s cubic-bezier(.34,1.7,.64,1);
 }
 body.gm-minimal .tw:hover:not(.ct):not(.afd):not(.inv){
   transform:translateY(-10px) scale(1.08) rotate(-1.5deg);
-  filter:drop-shadow(0 6px 16px rgba(var(--a1r),.4));
 }
 /* Scrollbar accent */
 body.gm-minimal ::-webkit-scrollbar-thumb{background:rgba(var(--a1r),.3)!important;border-radius:4px}
@@ -599,8 +598,8 @@ body.bg-noblur #bgl{filter:brightness(.68)}
 .player-area{flex-shrink:0;padding:4px 9px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;border-top:1px solid rgba(var(--a1r),.1);transition:all .4s;background:rgba(0,0,0,.12)}
 .player-hand{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;align-items:flex-end;min-height:44px}
 /* Valid tile pulse glow */
-.tw.valid-tile svg{filter:drop-shadow(0 0 5px rgba(74,191,122,.7)) drop-shadow(0 0 2px rgba(74,191,122,.4));animation:validPulse 1.4s ease-in-out infinite;}
-@keyframes validPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(74,191,122,.5))}50%{filter:drop-shadow(0 0 10px rgba(74,191,122,.9)) drop-shadow(0 0 20px rgba(74,191,122,.3))}}
+/* valid tile: subtle top border highlight only, no glow */
+.tw.valid-tile svg rect:first-child{stroke:rgba(74,191,122,.55)!important;stroke-width:2px!important;}
 /* Invalid/unplayable tile */
 .tw.inv{opacity:.28;cursor:not-allowed;}
 /* Dragging tile ghost */
@@ -3277,7 +3276,7 @@ function newGame(){
 function newGameSilent(){
   var gAv=document.getElementById('g-av'),gN=document.getElementById('g-name');
   if(CUR){renderPfpEl(gAv,CUR.pfp);si('g-name',CUR.name||'—');}
-  initGame();render();setSt(is2P()?'Player 1 — drag a tile':t('status-drag'));
+  initGame();render();setSt('');
   si('by-cnt',G.by.length);closeM();updateStats();updateFoulBtn();
   if(!bgOn)burst(cvs.width/2,cvs.height/2,24,1.1);
   // In 2P, show "Player 1 — you're starting!" screen
@@ -3345,23 +3344,24 @@ function pips(v,ox,oy,sz){return(PP[v]||[]).map(function(xy){return '<circle cx=
 
 // Standing tile: portrait, pips on top half and bottom half, horizontal divider
 // ── SKIN COLOR HELPERS ──
-function getSkinFill(isDouble){
-  var sk=SHOP_SKINS.find(function(s){return s.id===EQUIPPED_SKIN;})||SHOP_SKINS[0];
-  return isDouble?(sk.fillDouble||sk.fill):sk.fill;
+function getSkinForId(skinId,isDouble,sel){
+  var sk=SHOP_SKINS.find(function(s){return s.id===skinId;})||SHOP_SKINS[0];
+  return {
+    fill:isDouble?(sk.fillDouble||sk.fill):sk.fill,
+    stroke:sel?'var(--a1)':sk.stroke,
+    pip:sk.pip,
+    div:isDouble?sk.stroke:(sk.divider||(sk.stroke+'88'))
+  };
 }
-function getSkinStroke(sel){
-  if(sel)return'var(--a1)';
-  var sk=SHOP_SKINS.find(function(s){return s.id===EQUIPPED_SKIN;})||SHOP_SKINS[0];
-  return sk.stroke;
-}
-function getSkinPip(){
-  var sk=SHOP_SKINS.find(function(s){return s.id===EQUIPPED_SKIN;})||SHOP_SKINS[0];
-  return sk.pip;
-}
-function getSkinDiv(isDouble){
-  var sk=SHOP_SKINS.find(function(s){return s.id===EQUIPPED_SKIN;})||SHOP_SKINS[0];
-  return isDouble?sk.stroke:sk.divider||(sk.stroke+'88');
-}
+function getSkinFill(isDouble){return getSkinForId(EQUIPPED_SKIN,isDouble,false).fill;}
+function getSkinStroke(sel){return getSkinForId(EQUIPPED_SKIN,false,sel).stroke;}
+function getSkinPip(){return getSkinForId(EQUIPPED_SKIN,false,false).pip;}
+function getSkinDiv(isDouble){return getSkinForId(EQUIPPED_SKIN,isDouble,false).div;}
+// Default skin (for chain/board tiles — neutral, no personal skin)
+function getDefaultSkinFill(isDouble){return isDouble?'#f8f0d5':'#f5efd8';}
+function getDefaultSkinStroke(){return '#c8b888';}
+function getDefaultSkinPip(){return '#1a0e06';}
+function getDefaultSkinDiv(){return '#d4c8a8';}
 // Override pips to use skin pip color
 function pipsColored(v,ox,oy,sz,pip){
   pip=pip||getSkinPip();
@@ -3380,7 +3380,7 @@ function tile(a,b,sel){
   var hi=sel?'<rect x="2" y="2" width="'+(W-4)+'" height="'+(H-4)+'" rx="4" fill="none" stroke="rgba(var(--a1r),.5)" stroke-width="1.3"/>':''
   var midY=(TS+PAD+GAP/2).toFixed(1);
   return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"'
-    +' style="filter:'+(EQUIPPED_SKIN!=='default'?'drop-shadow(0 1px 4px rgba(0,0,0,.4))':'none')+'">' 
+    +'>' 
     +'<rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" rx="5" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+(sel?2:1.5)+'"/>' 
     +hi
     +'<line x1="'+(PAD+2)+'" y1="'+midY+'" x2="'+(W-PAD-2)+'" y2="'+midY+'" stroke="'+divColor+'" stroke-width="1"/>' 
@@ -3538,7 +3538,7 @@ function revealFor2P(){
   var ppo=document.getElementById('pass-phone-overlay');
   if(ppo)ppo.classList.remove('on');
   render();
-  setSt(G.turn==='p'?'Player 1 — drag a tile':'Player 2 — drag a tile');
+  setSt('');
 }
 
 function afterPlayerMove(){
@@ -3556,7 +3556,7 @@ function afterPlayerMove(){
       showPassPhone();
     }, 500);
   } else {
-    G.turn='a';render();setSt(t('status-cpu'));aiTurn();
+    G.turn='a';render();setSt('');aiTurn();
   }
 }
 
@@ -3613,12 +3613,12 @@ function aiTurn(){
       G._dropOrigin=caRect?{x:caRect.width*(side==='l'?0.1:0.9),y:0}:null;
       playT(a,b,side);remT(G.ah,a,b);
       if(!bgOn)burst(cvs.width/2,80,14,.7,true);sndAI();vibe(20);
-      if(!checkWin()){G.turn='p';render();setSt(t('status-drag'));}
+      if(!checkWin()){G.turn='p';render();setSt('');}
     }else if(G.by.length){
       var d=G.by.pop();G.ah.push(d);
       if(validM(G.ah).length>0)setTimeout(function(){aiTurn();},cfg.d/2);
-      else{G.turn='p';render();setSt(t('status-cp'));if(!checkBlocked())render();}
-    }else{if(checkBlocked())return;G.turn='p';render();setSt(t('status-cp'));}
+      else{G.turn='p';render();setSt('');if(!checkBlocked())render();}
+    }else{if(checkBlocked())return;G.turn='p';render();setSt('');}
   },cfg.d+Math.random()*cfg.r);
 }
 
@@ -3628,7 +3628,7 @@ function playerDraw(){
   if(!G.by.length||G.over)return;
   if(!is2P()&&G.turn!=='p')return;
   var tt=G.by.pop();curHand.push(tt);G.drawMode=true;dragIdx=-1;sndDraw();render();G._draws=(G._draws||0)+1;progressMission('draws_tile',1);
-  setSt(t('status-drew',{a:tt[0],b:tt[1]}),canP(tt[0],tt[1]).any?'ok':'warn');
+  setSt('');
   document.getElementById('btn-draw').disabled=!G.by.length||G.drawMode;
   document.getElementById('btn-pass').disabled=false;
 }
@@ -3778,46 +3778,69 @@ function renderChain(){
   //   - chain goes: left←→right across, when hitting wall → turn DOWN one row, then reverse direction
 
   var positions=[];
-  var DIR_R=1, DIR_L=-1;
-  var dir=DIR_R; // start going right
-  // start x: center if short chain, left margin if long
+  var DIR_R=1,DIR_L=-1,DIR_D=2; // right, left, down
+  var dir=DIR_R;
   var x=MARGIN;
-  var y=Math.floor((aH-th)/2); // start vertically centered
+  var y=Math.floor((aH-th)/2);
   var rowY=y;
+  // Track which column we go down when turning the corner
+  var cornerX=0; // x position of the corner (right or left wall)
+  var phase=0;   // 0=first row going right, 1=going down, 2=second row going left
 
   for(var i=0;i<G.chain.length;i++){
     var tt=G.chain[i];
     var isDouble=(tt.l===tt.r);
-    // double tile rendered rotated 90° → it's tw tall, th wide → we swap w/h
-    var cw=isDouble?th:tw;  // this tile's width on screen
-    var ch=isDouble?tw:th;  // this tile's height on screen
-    var rot=isDouble?90:0;
-
-    // vertical-center within row height
-    var ty=rowY+(th-ch)/2;
-    var tx;
-    if(dir===DIR_R){
-      tx=x;
-      x+=cw+2; // advance right
+    // doubles rotated 90° — appear as wide tiles
+    var cw,ch,rot;
+    if(dir===DIR_D){
+      // going down: doubles stay portrait, normals rotated 90° to portrait
+      cw=isDouble?tw:tw; ch=isDouble?th:tw; rot=isDouble?0:90;
     } else {
-      tx=x-cw;
-      x=tx-2; // advance left
+      cw=isDouble?th:tw; ch=isDouble?tw:th; rot=isDouble?90:0;
     }
-    positions.push({tt:tt,x:tx,y:ty,rot:rot,isDouble:isDouble,cw:cw,ch:ch});
 
-    // Check if next tile would overflow → wrap to next row
+    var tx,ty;
+    if(dir===DIR_R){
+      tx=x; ty=rowY+(th-ch)/2;
+      x+=cw+2;
+    } else if(dir===DIR_L){
+      tx=x-cw; ty=rowY+(th-ch)/2;
+      x=tx-2;
+    } else { // DIR_D
+      tx=cornerX+(tw-cw)/2; ty=y;
+      y+=ch+2;
+    }
+    positions.push({tt:tt,x:tx,y:ty,rot:rot,isDouble:isDouble,cw:cw,ch:ch,dir:dir});
+
+    // Check overflow and turn
     if(i<G.chain.length-1){
       var next=G.chain[i+1];
-      var nextDouble=(next.l===next.r);
-      var nextW=nextDouble?th:tw;
-      var nextX=(dir===DIR_R)?x+nextW+2:x-nextW-2;
-      var overflow=(dir===DIR_R&&nextX>aW-MARGIN)||(dir===DIR_L&&x-nextW-2<MARGIN);
-      if(overflow){
-        // Snap current x to wall and step down
-        rowY+=th+4;
-        y=rowY;
-        dir=dir===DIR_R?DIR_L:DIR_R;
-        x=(dir===DIR_R)?MARGIN:aW-MARGIN;
+      var nD=(next.l===next.r);
+      if(dir===DIR_R){
+        var nW=nD?th:tw;
+        if(x+nW+2>aW-MARGIN){
+          // Turn: go down along right wall
+          cornerX=aW-MARGIN-tw;
+          y=rowY+th+2;
+          dir=DIR_D;
+        }
+      } else if(dir===DIR_D){
+        // Check if we've gone down enough to start going left
+        var nH2=nD?tw:th;
+        if(y+nH2+2>aH-MARGIN){
+          // Turn: go left along bottom
+          rowY=y-2;
+          x=cornerX;
+          dir=DIR_L;
+        }
+      } else { // DIR_L
+        var nW2=nD?th:tw;
+        if(x-nW2-2<MARGIN){
+          // Turn: go down along left wall
+          cornerX=MARGIN;
+          y=rowY+th+2;
+          dir=DIR_D;
+        }
       }
     }
   }
@@ -3833,22 +3856,23 @@ function renderChain(){
     // re-run layout with smaller tiles
     tw=sTS+sPAD*2; th=sTS*2+sGAP+sPAD*2;
     positions=[];
-    dir=DIR_R; x=MARGIN; rowY=Math.floor((aH-th)/2);
+    dir=DIR_R; x=MARGIN; y=Math.floor((aH-th)/2); rowY=y; cornerX=0; phase=0;
     for(var i=0;i<G.chain.length;i++){
       var tt=G.chain[i];
       var isDouble=(tt.l===tt.r);
-      var cw=isDouble?th:tw;
-      var ch=isDouble?tw:th;
-      var rot=isDouble?90:0;
-      var ty=rowY+(th-ch)/2;
-      var tx;
-      if(dir===DIR_R){tx=x;x+=cw+2;}
-      else{tx=x-cw;x=tx-2;}
-      positions.push({tt:tt,x:tx,y:ty,rot:rot,isDouble:isDouble,cw:cw,ch:ch});
+      var cw2,ch2,rot2;
+      if(dir===DIR_D){cw2=tw;ch2=isDouble?th:tw;rot2=isDouble?0:90;}
+      else{cw2=isDouble?th:tw;ch2=isDouble?tw:th;rot2=isDouble?90:0;}
+      var tx2,ty2;
+      if(dir===DIR_R){tx2=x;ty2=rowY+(th-ch2)/2;x+=cw2+2;}
+      else if(dir===DIR_L){tx2=x-cw2;ty2=rowY+(th-ch2)/2;x=tx2-2;}
+      else{tx2=cornerX+(tw-cw2)/2;ty2=y;y+=ch2+2;}
+      positions.push({tt:tt,x:tx2,y:ty2,rot:rot2,isDouble:isDouble,cw:cw2,ch:ch2,dir:dir});
       if(i<G.chain.length-1){
-        var next=G.chain[i+1];var nextDouble=(next.l===next.r);var nextW=nextDouble?th:tw;
-        var overflow=(dir===DIR_R&&x+nextW+2>aW-MARGIN)||(dir===DIR_L&&x-nextW-2<MARGIN);
-        if(overflow){rowY+=th+4;dir=dir===DIR_R?DIR_L:DIR_R;x=(dir===DIR_R)?MARGIN:aW-MARGIN;}
+        var next2=G.chain[i+1];var nD2=(next2.l===next2.r);
+        if(dir===DIR_R){if(x+(nD2?th:tw)+2>aW-MARGIN){cornerX=aW-MARGIN-tw;y=rowY+th+2;dir=DIR_D;}}
+        else if(dir===DIR_D){if(y+(nD2?tw:th)+2>aH-MARGIN){rowY=y-2;x=cornerX;dir=DIR_L;}}
+        else{if(x-(nD2?th:tw)-2<MARGIN){cornerX=MARGIN;y=rowY+th+2;dir=DIR_D;}}
       }
     }
   }
@@ -3916,14 +3940,15 @@ function tileScaled(a,b,sel,sTS,sPAD,sGAP){
   var W=sTS+sPAD*2;
   var H=sTS*2+sGAP+sPAD*2;
   var D=a===b;
-  var fill=getSkinFill(D);
-  var stroke=getSkinStroke(sel);
-  var pip=getSkinPip();
-  var divColor=getSkinDiv(D);
+  // Chain/board tiles always use DEFAULT skin — not the player's equipped skin
+  var fill=getDefaultSkinFill(D);
+  var stroke=sel?'var(--a1)':getDefaultSkinStroke();
+  var pip=getDefaultSkinPip();
+  var divColor=getDefaultSkinDiv();
   var hi=sel?'<rect x="2" y="2" width="'+(W-4)+'" height="'+(H-4)+'" rx="4" fill="none" stroke="rgba(var(--a1r),.5)" stroke-width="1.3"/>':''
   var midY=(sTS+sPAD+sGAP/2).toFixed(1);
   return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"'
-    +' style="filter:'+(EQUIPPED_SKIN!=='default'?'drop-shadow(0 1px 4px rgba(0,0,0,.4))':'none')+'">' 
+    +'>' 
     +'<rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" rx="5" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+(sel?2:1.5)+'"/>' 
     +hi
     +'<line x1="'+(sPAD+2)+'" y1="'+midY+'" x2="'+(W-sPAD-2)+'" y2="'+midY+'" stroke="'+divColor+'" stroke-width="1"/>' 
