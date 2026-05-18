@@ -2695,20 +2695,84 @@ function applySkin(){
   ['default','gold','dark','neon','rose','green'].forEach(function(s){document.body.classList.remove('skin-'+s);});
   if(EQUIPPED_SKIN&&EQUIPPED_SKIN!=='default')document.body.classList.add('skin-'+EQUIPPED_SKIN);
 }
-function applyFrame(){
-  // Apply frame to all profile avatars
-  var fr=SHOP_FRAMES.find(function(f){return f.id===EQUIPPED_FRAME;})||SHOP_FRAMES[0];
-  document.querySelectorAll('.home-av,.hdr-pfp,.pp-av-wrap,.g-av').forEach(function(el){
-    el.style.borderColor=fr.color.startsWith('linear')?'#8b5cf6':fr.color;
-    el.style.boxShadow=fr.glow!=='transparent'?'0 0 10px '+fr.glow:'';
-    if(fr.animate)el.style.animation='framePulse 1.5s ease-in-out infinite';
-    else el.style.animation='';
-  });
-}
 function applyBannerEq(){
   var bn=SHOP_BANNERS_DATA.find(function(b){return b.id===EQUIPPED_BANNER_ID;})||SHOP_BANNERS_DATA[0];
-  var ppBanner=document.getElementById('pp-banner');
-  if(ppBanner&&bn.id!=='none'){ppBanner.style.background=bn.bg;}
+
+  // Build the style object we'll apply everywhere
+  function applyBannerToEl(el){
+    if(!el)return;
+    if(bn.id==='none'){
+      // Default — show user's uploaded banner if any, else bg gradient
+      if(CUR&&CUR._origBanner&&CUR._origBanner.src){
+        el.style.backgroundImage='url('+CUR._origBanner.src+')';
+        el.style.backgroundSize='cover';
+        el.style.backgroundPosition='center';
+        el.style.background='';
+      } else {
+        el.style.backgroundImage='';
+        el.style.background='var(--bg3)';
+      }
+    } else if(bn.isGif&&bn.src){
+      el.style.backgroundImage='url('+bn.src+')';
+      el.style.backgroundSize='cover';
+      el.style.backgroundPosition='center';
+      el.style.background='';
+    } else {
+      el.style.backgroundImage='';
+      el.style.background=bn.bg||'var(--bg3)';
+    }
+  }
+
+  // Apply to profile page banner
+  applyBannerToEl(document.getElementById('pp-banner'));
+  // Apply to in-game profile popup banner
+  applyBannerToEl(document.getElementById('gpp-banner'));
+
+  // Store on CUR so renderProfile and showGameProfile always use it
+  if(CUR){
+    // Preserve original uploaded banner
+    if(!CUR._origBanner)CUR._origBanner=CUR.banner||null;
+    // Set active banner for rendering
+    if(bn.id==='none'){
+      CUR.banner=CUR._origBanner||null;
+    } else if(bn.isGif&&bn.src){
+      CUR.banner={src:bn.src,isShopBanner:true};
+    } else {
+      CUR.banner={bg:bn.bg,isShopBanner:true};
+    }
+  }
+}
+
+function applyFrame(){
+  var fr=SHOP_FRAMES.find(function(f){return f.id===EQUIPPED_FRAME;})||SHOP_FRAMES[0];
+  var isDefault=fr.id==='none';
+
+  // Store on CUR so renderProfile always re-applies it
+  if(CUR){
+    CUR._equippedFrame=fr.id;
+    CUR._frameColor=fr.color;
+    CUR._frameGlow=fr.glow;
+    CUR._frameAnimate=fr.animate||false;
+  }
+
+  // Apply to all visible avatar elements right now
+  var selectors=['.home-av','.hdr-pfp','#pp-av-wrap','#gpp-frame-ring','#gpp-av'];
+  selectors.forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(el){
+      if(isDefault){
+        el.style.borderColor='';
+        el.style.boxShadow='';
+        el.style.animation='';
+      } else {
+        el.style.borderColor=fr.color.startsWith('linear')?'transparent':fr.color;
+        if(fr.color.startsWith('linear')){
+          el.style.background=fr.color;
+        }
+        el.style.boxShadow=fr.glow!=='transparent'?'0 0 12px '+fr.glow+',0 0 0 2px '+fr.glow.replace(',.',',.15)').split(',').slice(0,2).join(','):'';
+        el.style.animation=fr.animate?'framePulse 1.5s ease-in-out infinite':'';
+      }
+    });
+  });
 }
 
 function buildShop(){
@@ -2883,9 +2947,35 @@ function shopClickSkin(skin){
   skin.owned=true;EQUIPPED_SKIN=skin.id;applySkin();saveShop();buildShopSkins();
   showPrize('New Skin!',skin.name+' unlocked!',[{ico:'🎨',val:skin.name,lbl:'Equipped'}],'🎉');
 }
+function shopClickBanner(banner){
+  var isOwned=banner.owned||banner.id==='none';
+  if(isOwned){
+    EQUIPPED_BANNER_ID=banner.id;
+    // When switching back to 'none', restore original banner
+    if(banner.id==='none'&&CUR&&CUR._origBanner){
+      CUR.banner=CUR._origBanner;
+    }
+    applyBannerEq();saveShop();buildShopBanners();
+    showToast(banner.id==='none'?'Original banner restored':banner.name+' banner active','🖼');
+    return;
+  }
+  if(banner.currency==='gems'){
+    if(!spendGems(banner.price)){showToast('Need '+banner.price+' 💎 diamonds!','');return;}
+  }else{
+    if(!spendCoins(banner.price)){showToast('Need '+banner.price+' 🪙 coins!','');return;}
+  }
+  banner.owned=true;EQUIPPED_BANNER_ID=banner.id;
+  applyBannerEq();saveShop();buildShopBanners();
+  showPrize('New Banner!',banner.name+' unlocked!',[{ico:'🖼',val:banner.name,lbl:'Banner'}],'🖼');
+}
 function shopClickFrame(frame){
   var isOwned=frame.owned||frame.id==='none';
-  if(isOwned){EQUIPPED_FRAME=frame.id;applyFrame();saveShop();buildShopFrames();showToast(frame.name+' frame active','✨');return;}
+  if(isOwned){
+    EQUIPPED_FRAME=frame.id;
+    applyFrame();saveShop();buildShopFrames();
+    showToast(frame.id==='none'?'Frame removed':frame.name+' frame active','✨');
+    return;
+  }
   if(frame.currency==='gems'){
     if(!spendGems(frame.price)){showToast('Need '+frame.price+' 💎 diamonds!','');return;}
   }else{
@@ -2893,17 +2983,6 @@ function shopClickFrame(frame){
   }
   frame.owned=true;EQUIPPED_FRAME=frame.id;applyFrame();saveShop();buildShopFrames();
   showPrize('New Frame!',frame.name+' frame unlocked!',[{ico:'✨',val:frame.name,lbl:'Frame'}],'✨');
-}
-function shopClickBanner(banner){
-  var isOwned=banner.owned||banner.id==='none';
-  if(isOwned){EQUIPPED_BANNER_ID=banner.id;applyBannerEq();saveShop();buildShopBanners();showToast(banner.name+' banner active','🖼');return;}
-  if(banner.currency==='gems'){
-    if(!spendGems(banner.price)){showToast('Need '+banner.price+' 💎 diamonds!','');return;}
-  }else{
-    if(!spendCoins(banner.price)){showToast('Need '+banner.price+' 🪙 coins!','');return;}
-  }
-  banner.owned=true;EQUIPPED_BANNER_ID=banner.id;applyBannerEq();saveShop();buildShopBanners();
-  showPrize('New Banner!',banner.name+' unlocked!',[{ico:'🖼',val:banner.name,lbl:'Banner'}],'🖼');
 }
 function shopBuyBundle(bundle){
   if(!spendCoins(bundle.price)){showToast('Need '+bundle.price+' 🪙 coins!','');return;}
@@ -3585,7 +3664,25 @@ function updateHomeUI(){
 function renderProfile(){
   if(!CUR)return;
   var bn=document.getElementById('pp-banner');
-  if(bn)bn.style.backgroundImage=CUR.banner&&CUR.banner.src?'url('+CUR.banner.src+')':'';
+  if(bn){
+    // Use shop banner if equipped, else uploaded banner, else default bg
+    if(CUR.banner&&CUR.banner.isShopBanner){
+      if(CUR.banner.src){
+        bn.style.backgroundImage='url('+CUR.banner.src+')';
+        bn.style.backgroundSize='cover';bn.style.backgroundPosition='center';bn.style.background='';
+      } else if(CUR.banner.bg){
+        bn.style.backgroundImage='';bn.style.background=CUR.banner.bg;
+      }
+    } else if(CUR._origBanner&&CUR._origBanner.src){
+      bn.style.backgroundImage='url('+CUR._origBanner.src+')';
+      bn.style.backgroundSize='cover';bn.style.backgroundPosition='center';bn.style.background='';
+    } else if(CUR.banner&&CUR.banner.src){
+      bn.style.backgroundImage='url('+CUR.banner.src+')';
+      bn.style.backgroundSize='cover';bn.style.backgroundPosition='center';bn.style.background='';
+    } else {
+      bn.style.backgroundImage='';bn.style.background='var(--bg3)';
+    }
+  }
   renderPfpEl(document.getElementById('pp-av'),CUR.pfp);
   si('pp-dn',CUR.name||'—');si('pp-un','@'+(CUR.user||'—'));
   var gMap={m:'♂',f:'♀',o:'⚧'};
@@ -3603,6 +3700,8 @@ function renderProfile(){
   si('pp-w',CUR.wins||0);si('pp-l',CUR.losses||0);si('pp-d',CUR.draws||0);si('pp-f',CUR.fouls||0);
   si('pp-wl',t('pp-wl'));si('pp-ll',t('pp-ll'));si('pp-dl',t('pp-dl'));si('pp-fl',t('pp-fl'));
   si('pp-logout-lbl',t('pp-logout-lbl'));si('wr-lbl',t('wr-lbl'));si('pp-stats-lbl',t('pp-stats-lbl'));
+  // Re-apply frame overlay
+  applyFrame();
 }
 
 // ════════════════════════════════════════════════
@@ -4606,13 +4705,22 @@ function _gmOutside(e){
 // ════════════════════════════════════════════════
 function showGameProfile(){
   if(!CUR)return;
-  // Banner
+  // Banner — shop banner overlays original; "none" shows original
   var banner=document.getElementById('gpp-banner');
   if(banner){
-    if(CUR.banner&&CUR.banner.src){
+    if(CUR.banner&&CUR.banner.isShopBanner){
+      if(CUR.banner.src){
+        banner.style.backgroundImage='url('+CUR.banner.src+')';
+        banner.style.backgroundSize='cover';banner.style.backgroundPosition='center';banner.style.background='';
+      } else if(CUR.banner.bg){
+        banner.style.backgroundImage='';banner.style.background=CUR.banner.bg;
+      }
+    } else if(CUR._origBanner&&CUR._origBanner.src){
+      banner.style.backgroundImage='url('+CUR._origBanner.src+')';
+      banner.style.backgroundSize='cover';banner.style.backgroundPosition='center';banner.style.background='';
+    } else if(CUR.banner&&CUR.banner.src){
       banner.style.backgroundImage='url('+CUR.banner.src+')';
-      banner.style.backgroundSize='cover';
-      banner.style.backgroundPosition='center';
+      banner.style.backgroundSize='cover';banner.style.backgroundPosition='center';banner.style.background='';
     } else {
       banner.style.backgroundImage='';
       banner.style.background='linear-gradient(135deg,var(--bg3) 0%,var(--bg4) 50%,rgba(var(--a1r),.12) 100%)';
@@ -4620,44 +4728,36 @@ function showGameProfile(){
   }
   // Avatar
   renderPfpEl(document.getElementById('gpp-av'),CUR.pfp);
-  // Apply frame ring color from equipped frame
-  var fr = SHOP_FRAMES.find(function(f){return f.id===EQUIPPED_FRAME;})||SHOP_FRAMES[0];
-  var ring = document.getElementById('gpp-frame-ring');
+  // Frame ring — use stored frame from CUR
+  var ring=document.getElementById('gpp-frame-ring');
   if(ring){
-    if(fr.color&&fr.color.startsWith('linear')){
-      ring.style.background = fr.color;
+    if(CUR._equippedFrame&&CUR._equippedFrame!=='none'&&CUR._frameColor){
+      var fc=CUR._frameColor;
+      ring.style.background=fc.startsWith('linear')?fc:'linear-gradient(135deg,'+fc+',var(--a2))';
+      ring.style.animation=CUR._frameAnimate?'profileRingPulse 1.5s ease-in-out infinite':'profileRingPulse 2.5s ease-in-out infinite';
     } else {
-      ring.style.background = 'linear-gradient(135deg,'+fr.color+',var(--a2))';
+      ring.style.background='linear-gradient(135deg,var(--a1),var(--a2))';
+      ring.style.animation='profileRingPulse 2.5s ease-in-out infinite';
     }
   }
   // Info
   si('gpp-name',CUR.name||'—');
   si('gpp-user','@'+(CUR.user||'—'));
-  // Badges
   var games=(CUR.wins||0)+(CUR.losses||0)+(CUR.draws||0);
   si('gpp-rank',rankLabel(games));
   var gMap={m:'♂ Male',f:'♀ Female',o:'⚧ Other'};
   si('gpp-gender',gMap[CUR.gender]||'Player');
-  // Win rate bar
+  // Win rate
   var wr=games>0?Math.round((CUR.wins||0)/games*100):0;
   si('gpp-wr-pct',wr+'%');
-  setTimeout(function(){
-    var fill=document.getElementById('gpp-wr-fill');
-    if(fill) fill.style.width=wr+'%';
-  }, 150);
+  setTimeout(function(){var fill=document.getElementById('gpp-wr-fill');if(fill)fill.style.width=wr+'%';},150);
   // Stats
-  si('gpp-w',CUR.wins||0);
-  si('gpp-l',CUR.losses||0);
-  si('gpp-d',CUR.draws||0);
-  si('gpp-f',CUR.fouls||0);
+  si('gpp-w',CUR.wins||0);si('gpp-l',CUR.losses||0);si('gpp-d',CUR.draws||0);si('gpp-f',CUR.fouls||0);
   // Economy
-  si('gpp-coins',fmtNum(ECO.coins));
-  si('gpp-gems',fmtNum(ECO.gems));
-  // Show with slide-up
+  si('gpp-coins',fmtNum(ECO.coins));si('gpp-gems',fmtNum(ECO.gems));
+  // Show
   document.getElementById('game-profile-overlay').classList.add('on');
-  requestAnimationFrame(function(){
-    document.getElementById('game-profile-popup').classList.add('on');
-  });
+  requestAnimationFrame(function(){document.getElementById('game-profile-popup').classList.add('on');});
 }
 function closeGameProfile(){
   document.getElementById('game-profile-overlay').classList.remove('on');
@@ -5165,6 +5265,9 @@ function init(){
 
 function enterHome(){
   goSc('sh');updateHomeUI();updateEcoUI();checkDailyDot();
+  // Preserve original banner (set during signup) before any shop banner overrides
+  if(CUR&&!CUR._origBanner&&CUR.banner){CUR._origBanner=CUR.banner;}
+  applyBannerEq();applyFrame();
   if(!bgOn)burst(cvs.width/2,cvs.height/2,28,1.2);
 }
 
